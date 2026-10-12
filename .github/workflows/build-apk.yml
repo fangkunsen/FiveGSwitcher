@@ -1,7 +1,6 @@
 name: Build debug APK
 
 on:
-  # 只允许手动运行，避免每次提交都消耗 Actions 配额
   workflow_dispatch:
 
 permissions:
@@ -10,35 +9,27 @@ permissions:
 jobs:
   build:
     name: Build debug APK
-    runs-on: ubuntu-latest
+    # 固定 runner，避免 ubuntu-latest 后续升级影响旧 Android 项目
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
 
     steps:
-      # 拉取当前 fork 的代码
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
-      # Android 项目一般可使用 JDK 17
       - name: Set up Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "17"
           cache: gradle
 
-      # GitHub runner 已预装 Android SDK，此步骤补充常用命令行工具
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
-      # 确保 Gradle Wrapper 可以在 Linux runner 中执行
       - name: Set Gradle permission
         run: chmod +x gradlew
 
-      # 使用项目自带的 Gradle 版本构建 debug APK
       - name: Build debug APK
         run: ./gradlew assembleDebug --stacktrace
 
-      # 无论 APK 位于 app 或其他模块，均自动收集
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
